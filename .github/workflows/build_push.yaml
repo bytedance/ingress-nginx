@@ -1,0 +1,33 @@
+name: Build & Push Ingress Controller
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Docker Buildx
+      id: buildx
+      uses: crazy-max/ghaction-docker-buildx@v1
+      with:
+        buildx-version: latest
+        qemu-version: latest
+
+    - name: Available platforms
+      run: echo ${{ steps.buildx.outputs.platforms }}
+
+    - name: Set Short Commit Sha
+      id: vars
+      run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
+    - name: Docker Login
+      run: |
+        docker login https://docker.pkg.github.com -u ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build Docker image
+      run: |
+        make build
+        REGISTRY=docker.pkg.github.com/${{ github.repository }} TAG=${{ steps.vars.outputs.sha_short }} make container
+        docker push docker.pkg.github.com/${{ github.repository }}/nginx-ingress-controller-amd64:${{ steps.vars.outputs.sha_short }}
