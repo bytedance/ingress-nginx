@@ -24,10 +24,11 @@ jobs:
 
     - name: Docker Login
       run: |
-        docker login https://docker.pkg.github.com -u ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
+        docker login -u fedlearner --password ${{ secrets.DOCKER_REGISTRY }}
 
     - name: Build Docker image
       run: |
         make build
         REGISTRY=docker.pkg.github.com/${{ github.repository }} TAG=${{ steps.vars.outputs.sha_short }} make container
-        docker push docker.pkg.github.com/${{ github.repository }}/nginx-ingress-controller-amd64:${{ steps.vars.outputs.sha_short }}
+        docker tag docker.pkg.github.com/${{ github.repository }}/nginx-ingress-controller-amd64:${{ steps.vars.outputs.sha_short }} fedlearner/nginx-ingress-controller:${{ steps.vars.outputs.sha_short }}
+        docker push fedlearner/nginx-ingress-controller:${{ steps.vars.outputs.sha_short }}
